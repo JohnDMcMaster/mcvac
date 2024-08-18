@@ -5,15 +5,25 @@ import shutil
 import sys
 import glob
 
-def print_debug(s = None):
+
+def print_debug(s=None):
     if False:
         print('DEBUG: %s' % s)
+
 
 def add_bool_arg(parser, yes_arg, default=False, **kwargs):
     dashed = yes_arg.replace('--', '')
     dest = dashed.replace('-', '_')
-    parser.add_argument(yes_arg, dest=dest, action='store_true', default=default, **kwargs)
-    parser.add_argument('--no-' + dashed, dest=dest, action='store_false', **kwargs)
+    parser.add_argument(yes_arg,
+                        dest=dest,
+                        action='store_true',
+                        default=default,
+                        **kwargs)
+    parser.add_argument('--no-' + dashed,
+                        dest=dest,
+                        action='store_false',
+                        **kwargs)
+
 
 def tobytes(buff):
     if type(buff) is str:
@@ -32,6 +42,7 @@ def tostr(buff):
         return ''.join([chr(b) for b in buff])
     else:
         assert 0, type(buff)
+
 
 def hexdump(data, label=None, indent='', address_width=8, f=sys.stdout):
     def isprint(c):
@@ -76,11 +87,14 @@ def hexdump(data, label=None, indent='', address_width=8, f=sys.stdout):
         ]))
         f.write((" " * (bytes_per_row - real_data)) + "|\n")
 
+
 '''
     (
     "\x08\x84\xA4\x06\x02\x00\x26\x00\x43\x00\xC0\x03\x00\x08\x10\x24"
     "\x00\x00\xC0\x1E\x00\x00\x85\x00")
 '''
+
+
 def str2hex(buff, prefix='', terse=True):
     if len(buff) == 0:
         return '""'
@@ -96,9 +110,10 @@ def str2hex(buff, prefix='', terse=True):
                 ret += '"'
             if not terse or len(buff) > 16:
                 ret += '%s"' % prefix
-            
-        ret += "\\x%02X" % (buff[i],)
+
+        ret += "\\x%02X" % (buff[i], )
     return ret + '"'
+
 
 def where(pos=1):
     # 0 represents this line
@@ -108,12 +123,13 @@ def where(pos=1):
     info = inspect.getframeinfo(frame)
     print('%s.%s():%d' % (info.filename, info.function, info.lineno))
 
+
 # Print timestamps in front of all output messages
 class IOTimestamp(object):
     def __init__(self, obj=sys, name='stdout'):
         self.obj = obj
         self.name = name
-        
+
         self.fd = obj.__dict__[name]
         obj.__dict__[name] = self
         self.nl = True
@@ -124,7 +140,7 @@ class IOTimestamp(object):
 
     def flush(self):
         self.fd.flush()
-       
+
     def write(self, data):
         parts = data.split('\n')
         for i, part in enumerate(parts):
@@ -139,6 +155,7 @@ class IOTimestamp(object):
             # Newline results in n + 1 list elements
             # The last element has no newline
             self.nl = i != (len(parts) - 1)
+
 
 def default_date_dir(root, prefix, postfix):
     datestr = datetime.datetime.now().isoformat()[0:10]
@@ -158,9 +175,17 @@ def default_date_dir(root, prefix, postfix):
                 return fn
         n += 1
 
+
 # Log file descriptor to file
 class IOLog(object):
-    def __init__(self, obj=sys, name='stdout', out_fn=None, out_fd=None, mode='a', shift=False, multi=False):
+    def __init__(self,
+                 obj=sys,
+                 name='stdout',
+                 out_fn=None,
+                 out_fd=None,
+                 mode='a',
+                 shift=False,
+                 multi=False):
         if not multi:
             if out_fd:
                 self.out_fd = out_fd
@@ -177,7 +202,7 @@ class IOLog(object):
                         continue
                     shutil.move(out_fn, dst)
                     break
-            
+
             hdr = mode == 'a' and os.path.exists(out_fn)
             self.out_fd = open(out_fn, mode)
             if hdr:
@@ -185,10 +210,10 @@ class IOLog(object):
                 self.out_fd.write('*' * 80 + '\n')
                 self.out_fd.write('*' * 80 + '\n')
                 self.out_fd.write('Log rolled over\n')
-        
+
         self.obj = obj
         self.name = name
-        
+
         self.fd = obj.__dict__[name]
         obj.__dict__[name] = self
         self.nl = True
@@ -199,7 +224,7 @@ class IOLog(object):
 
     def flush(self):
         self.fd.flush()
-       
+
     def write(self, data):
         self.fd.write(data)
         self.out_fd.write(data)
